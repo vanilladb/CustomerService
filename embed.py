@@ -1,8 +1,8 @@
 import os
 import pandas as pd
-import openai
+from openai import OpenAI
 
-def get_text_embeddings(csv_file, column_name, max_length=8000):
+def get_text_embeddings(csv_file, column_name, max_length=8191):
     """
     Read a CSV file with a column of text, split the text into tokens, get text embeddings using OpenAI,
     and write the embeddings to a Pandas DataFrame.
@@ -15,6 +15,7 @@ def get_text_embeddings(csv_file, column_name, max_length=8000):
     Returns:
         pandas.DataFrame: DataFrame with the text embeddings.
     """
+    client = OpenAI()
     # Read the CSV file into a DataFrame
     df = pd.read_csv(csv_file)
 
@@ -22,7 +23,7 @@ def get_text_embeddings(csv_file, column_name, max_length=8000):
     embeddings = []
 
     # Set up OpenAI API credentials
-    openai.api_key = os.getenv('OPENAI_API_KEY')
+    OpenAI.api_key = os.getenv('OPENAI_API_KEY')
 
     # Iterate over each row in the DataFrame
     for index, row in df.iterrows():
@@ -39,7 +40,7 @@ def get_text_embeddings(csv_file, column_name, max_length=8000):
         truncated_text = ' '.join(tokens)
 
         # Get the text embeddings using OpenAI
-        embedding = openai.Embedding.create(input=[truncated_text], model="text-embedding-ada-002")['data'][0]['embedding']
+        embedding = client.embeddings.create(input=[truncated_text], model="text-embedding-3-large", dimensions=3072).data[0].embedding
 
         # Append the embedding to the list
         embeddings.append(embedding)
@@ -55,4 +56,4 @@ if __name__ == "__main__":
     embeddings_df = get_text_embeddings('data/QP.csv', 'Prompt')
 
     # Write the embeddings to a CSV file
-    embeddings_df.to_csv('data/embeddings.csv', index=False)
+    embeddings_df.to_csv('data/embeddingsV3_3072.csv', index=False)
